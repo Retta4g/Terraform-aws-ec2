@@ -1,0 +1,40 @@
+name: Deploy Website
+
+on:
+  workflow_dispatch:
+
+env:
+  AWS_ACCESS_KEY_ID: ${{ secrets.SECRET_PRIME }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.SECRET_ACCESS_KEY }}
+  AWS_REGION: us-east-1
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: My First Terraform Setup
+        uses: hashicorp/setup-terraform@v1
+        with:
+          cli_config_credentials_token: ${{ secrets.MY_TERRAFORM_LOGIN_TOKEN }}
+      
+      - name: Run Terraform Init
+        run: terraform init
+
+      - name: Check Terraform Format
+        run: terraform fmt -check -recursive
+
+      - name: Run Terraform Plan
+        run: terraform plan
+        id: terraform_plan
+
+      - name: Run Terraform Apply
+        if: ${{ github.event.inputs.action == 'apply' && steps.terraform_plan.outcome == 'success' }}
+        run: terraform apply -auto-approve
+        id: terraform_apply
+      
+      - name: Run Terraform Destroy
+        if: ${{ github.event.inputs.action == 'destroy' && steps.terraform_plan.outcome == 'success' }}
+        run: terraform destroy -auto-approve
