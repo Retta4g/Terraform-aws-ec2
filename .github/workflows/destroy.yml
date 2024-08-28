@@ -1,4 +1,4 @@
-name: Destroy EC2 Resources
+name: Destroy Resources
 
 on:
   workflow_dispatch:
