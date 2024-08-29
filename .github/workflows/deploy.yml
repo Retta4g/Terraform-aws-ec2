@@ -4,8 +4,8 @@ on:
   workflow_dispatch:
 
 env:
-  AWS_ACCESS_KEY_ID: ${{ secrets.SECRET_PRIME }}
-  AWS_SECRET_ACCESS_KEY: ${{ secrets.SECRET_ACCESS_KEY }}
+  AWS_ACCESS_KEY_ID: ${{ secrets.SECRET_PRIME2 }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.SECRET_ACCESS_KEY2 }}
   AWS_REGION: us-east-1
 
 jobs:
@@ -18,7 +18,7 @@ jobs:
       - name: My First Terraform Setup
         uses: hashicorp/setup-terraform@v1
         with:
-          cli_config_credentials_token: ${{ secrets.MY_TERRAFORM_LOGIN_TOKEN }}
+          cli_config_credentials_token: ${{ secrets.MY_TERRAFORM_LOGIN_TOKEN2 }}
       
       - name: Run Terraform Init
         run: terraform init
