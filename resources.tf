@@ -42,15 +42,17 @@ resource "aws_route_table_association" "main" {
   route_table_id = aws_route_table.main.id
 }
 
-module "security" {
-  source  = "app.terraform.io/02-spring-cloud/security/aws"
-  version = "0.0.0"
+module "group2" {
+  source  = "app.terraform.io/02-spring-cloud/group2/security"
+  version = "1.0.0"
+
   vpc_id  = aws_vpc.main.id
 
+  # Adjust based on the actual module input requirements
   security_groups = {
     "web" = {
-      "description" = "Security Group for Web Tier"
-      "ingress_rules" = [
+      description = "Security Group for Web Tier"
+      ingress_rules = [
         {
           to_port     = 22
           from_port   = 22
@@ -73,20 +75,7 @@ module "security" {
           description = "https ingress rule"
         }
       ]
-    },
-  }
-}
-
-# Data source to retrieve the security group created by the module
-data "aws_security_group" "web_sg" {
-  filter {
-    name   = "vpc-id"
-    values = [aws_vpc.main.id]
-  }
-
-  filter {
-    name   = "group-name"
-    values = ["${var.prefix}-web"] # Adjust this name to match the security group created by your module
+    }
   }
 }
 
@@ -96,7 +85,7 @@ resource "aws_instance" "server" {
   key_name      = aws_key_pair.deployer.key_name
 
   subnet_id              = aws_subnet.main.id
-  vpc_security_group_ids = [data.aws_security_group.web_sg.id] # Reference the security group from the data source
+  vpc_security_group_ids = [module.security.web_security_group_id]
 
   user_data = <<-EOF
               #!/bin/bash
