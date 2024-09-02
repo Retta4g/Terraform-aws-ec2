@@ -46,7 +46,7 @@ module "security" {
   source  = "app.terraform.io/02-spring-cloud/security/aws"
   version = "0.0.0"
   vpc_id  = aws_vpc.main.id
-  
+
   security_groups = {
     "web" = {
       "description" = "Security Group for Web Tier"
@@ -86,7 +86,7 @@ data "aws_security_group" "web_sg" {
 
   filter {
     name   = "group-name"
-    values = ["${var.prefix}-web"]  # Adjust this name to match the security group created by your module
+    values = ["${var.prefix}-web"] # Adjust this name to match the security group created by your module
   }
 }
 
@@ -96,7 +96,7 @@ resource "aws_instance" "server" {
   key_name      = aws_key_pair.deployer.key_name
 
   subnet_id              = aws_subnet.main.id
-  vpc_security_group_ids = [data.aws_security_group.web_sg.id]  # Reference the security group from the data source
+  vpc_security_group_ids = [data.aws_security_group.web_sg.id] # Reference the security group from the data source
 
   user_data = <<-EOF
               #!/bin/bash

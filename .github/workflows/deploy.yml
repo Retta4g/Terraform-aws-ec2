@@ -1,6 +1,10 @@
 name: Deploy Website
 
 on:
+  push:
+    branches: [ "main" ] # git push
+  pull_request:
+    branches: [ "main" ]
   workflow_dispatch:
 
 env:
