@@ -6,7 +6,11 @@ on:
   pull_request:
     branches: [ "main" ]
   workflow_dispatch:
-
+    inputs:
+      action:
+        description: "Run Terraform Apply or Destroy?"
+        type: string
+        required: false
 env:
   AWS_ACCESS_KEY_ID: ${{ secrets.SECRET_PRIME2 }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.SECRET_ACCESS_KEY2 }}
@@ -20,25 +24,17 @@ jobs:
       - uses: actions/checkout@v4
       
       - name: My First Terraform Setup
-        uses: hashicorp/setup-terraform@v1
+        uses: hashicorp/setup-terraform@v2
         with:
           cli_config_credentials_token: ${{ secrets.MY_TERRAFORM_LOGIN_TOKEN2 }}
       
+      - name: Set up environment variables
+        run: |
+          echo "PUBLIC_KEY_CONTENT=$PUBLIC_KEY_CONTENT" >> $GITHUB_ENV
       - name: Run Terraform Init
         run: terraform init
-
-      - name: Check Terraform Format
-        run: terraform fmt -check -recursive
-
       - name: Run Terraform Plan
-        run: terraform plan
-        id: terraform_plan
-
-      - name: Run Terraform Apply
-        if: ${{ github.event.inputs.action == 'apply' && steps.terraform_plan.outcome == 'success' }}
-        run: terraform apply -auto-approve
-        id: terraform_apply
-      
-      - name: Run Terraform Destroy
-        if: ${{ github.event.inputs.action == 'destroy' && steps.terraform_plan.outcome == 'success' }}
-        run: terraform destroy -auto-approve
+        run: terraform plan -var "public_key_content=$PUBLIC_KEY_CONTENT"
+      - name: Run Terraform Deployment
+        run: terraform ${{ github.event.inputs.action }} -auto-approve -var "public_key_content=$PUBLIC_KEY_CONTENT"
+        if: ${{ github.event.inputs.action == 'apply' || github.event.inputs.action == 'destroy' }}
