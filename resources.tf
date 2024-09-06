@@ -38,7 +38,7 @@ resource "aws_route_table_association" "main" {
   subnet_id      = aws_subnet.main.id
   route_table_id = aws_route_table.main.id
 }
-module "security_gr" {
+module "group2" {
   source  = "app.terraform.io/02-spring-cloud/group2/securitys"
   version = "1.0.1"
   vpc_id  = aws_vpc.main.id
