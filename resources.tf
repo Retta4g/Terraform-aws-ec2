@@ -1,6 +1,6 @@
 # This is the original key pair resource
 resource "aws_key_pair" "deployer" {
-  key_name   = "new-deployer-key"
+  key_name   = "first deployer-key"
   public_key = file("~/.ssh/id_ed25519.pub")
 }
 
