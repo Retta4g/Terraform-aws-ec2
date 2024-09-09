@@ -1,6 +1,5 @@
-terraform {
+  terraform {
   cloud {
-
     organization = "02-spring-cloud"
 
     workspaces {

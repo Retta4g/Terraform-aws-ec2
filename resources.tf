@@ -1,25 +1,34 @@
+# This is the original key pair resource
+resource "aws_key_pair" "deployer" {
+  key_name   = "new-deployer-key"
+  public_key = file("~/.ssh/id_ed25519.pub")
+}
+
 variable "prefix" {
   type    = string
   default = "project-aug-28"
 }
-# Create a map of instance configurations for the loop.
+
 variable "instance_count" {
   type    = number
   default = 3
 }
-# Create a list for instance names
+
 locals {
   instance_names = [for i in range(var.instance_count) : "${var.prefix}-ec2-${i + 1}"]
 }
+
 resource "aws_vpc" "main" {
   cidr_block = "172.16.0.0/16"
   tags = {
     Name = join("-", [var.prefix, "vpc"])
   }
 }
+
 resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id
 }
+
 resource "aws_subnet" "main" {
   vpc_id     = aws_vpc.main.id
   cidr_block = "172.16.0.0/24"
@@ -27,6 +36,7 @@ resource "aws_subnet" "main" {
     Name = join("-", [var.prefix, "subnet"])
   }
 }
+
 resource "aws_route_table" "main" {
   vpc_id = aws_vpc.main.id
   route {
@@ -34,13 +44,15 @@ resource "aws_route_table" "main" {
     gateway_id = aws_internet_gateway.main.id
   }
 }
+
 resource "aws_route_table_association" "main" {
   subnet_id      = aws_subnet.main.id
   route_table_id = aws_route_table.main.id
 }
+
 module "group2" {
-  source  = "app.terraform.io/02-spring-cloud/group2/securitys"
-  version = "1.0.1"
+  source  = "app.terraform.io/02-spring-cloud/group2/security"
+  version = "3.0.0"
   vpc_id  = aws_vpc.main.id
   security_groups = {
     "web" = {
@@ -73,20 +85,21 @@ module "group2" {
           to_port     = 0
           from_port   = 0
           cidr_blocks = ["0.0.0.0/0"]
-          protocol    = "-1" # This allows all outbound traffic
+          protocol    = "-1"
           description = "allow all outbound traffic"
         }
       ]
     }
   }
 }
+
 resource "aws_instance" "server" {
   for_each               = toset(local.instance_names)
   ami                    = "ami-066784287e358dad1"
-  instance_type         = "t2.micro"
-  key_name              = aws_key_pair.deployer.key_name
-  subnet_id             = aws_subnet.main.id
-  vpc_security_group_ids = [module.security_gr.my-security_gr_id["web"]]
+  instance_type          = "t2.micro"
+  key_name               = aws_key_pair.deployer.key_name
+  subnet_id              = aws_subnet.main.id
+  vpc_security_group_ids = [module.group2.security_group_id["web"]]
   
   user_data = <<-EOF
                      #!/bin/bash
@@ -96,25 +109,18 @@ resource "aws_instance" "server" {
                      sudo systemctl enable httpd.service
                      echo "<h1> Hello World from project-aug-28 </h1>" | sudo tee /var/www/html/index.html
   EOF
+
   tags = {
-    Name = each.key  # Use the instance name
+    Name = join("-", [var.prefix,"ec2"])
   }
 }
-# Elastic IP resource for each instance
+
 resource "aws_eip" "instance_ip" {
   for_each = aws_instance.server
   instance = each.value.id
   domain   = "vpc"
 }
+
 output "instance_public_ips" {
   value = { for k, v in aws_eip.instance_ip : k => v.public_ip }
-}
-
-variable "public_key_content" {
-  description = "The content of the public key"
-  type        = string
-}
-resource "aws_key_pair" "deployer" {
-  key_name   = "your-key-name"
-  public_key = var.public_key_content
 }
