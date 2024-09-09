@@ -1,9 +1,7 @@
-name: Deploy Website
+name: Deploy Jobs
 
 on:
   push:
-    branches: [ "main" ]
-  pull_request:
     branches: [ "main" ]
   workflow_dispatch:
     inputs:
@@ -33,6 +31,9 @@ jobs:
       - name: Run Terraform Init
         run: terraform init
       
+      - name: Run Hidden files and folders
+        run: ls -aR ~/
+
       - name: Run Terraform Plan
         run: terraform plan -var "public_key_content=${{ secrets.PUBLIC_KEY_CONTENT }}"
 
